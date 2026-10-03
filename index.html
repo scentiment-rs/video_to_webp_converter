@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video to WebP Converter</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    /* 커스텀 슬라이더 스타일 */
+    input[type=range] {
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 9999px;
+      background: #334155;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      transition: all 0.15s ease-in-out;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      background: #7dd3fc;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white">
+
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-30 px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white font-bold text-xl">
+          W
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight tracking-tight text-white flex items-center gap-2">
+            Video to WebP Converter
+            <span class="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Client-Side Engine</span>
+          </h1>
+          <p class="text-xs text-slate-400">서버 전송 없이 100% 브라우저 내에서 안전하게 변환되는 고성능 WebP 컨버터</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700/80 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          MP4 / MKV / WebM 지원
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto w-full p-4 md:p-6 flex-1 flex flex-col gap-6">
+
+    <!-- 안내 메시지 박스 -->
+    <div class="bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 text-xs md:text-sm text-indigo-200/90 flex items-start gap-3">
+      <svg class="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <div>
+        <span class="font-semibold text-indigo-300">저장 위치 안내:</span> 최신 브라우저의 파일 시스템 API를 지원하여, 변환 완료 후 <b>[WebP 파일 저장하기]</b>를 누르면 원본 영상이 있는 폴더를 선택해 직접 저장할 수 있습니다. (미지원 브라우저는 기본 다운로드 폴더로 자동 저장됩니다.)
+      </div>
+    </div>
+
+    <!-- 파일 드롭존 (영상 미선택 시 노출) -->
+    <div id="dropzone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500 hover:bg-slate-900/40 bg-slate-900/20 rounded-3xl p-10 md:p-16 transition-all duration-300 text-center cursor-pointer flex flex-col items-center justify-center relative overflow-hidden group">
+      <input type="file" id="fileInput" accept="video/mp4,video/mkv,video/webm,video/quicktime,video/*,.mkv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+      <div class="w-20 h-20 rounded-2xl bg-slate-800/80 group-hover:scale-110 group-hover:bg-cyan-500/10 border border-slate-700/80 group-hover:border-cyan-500/40 flex items-center justify-center mb-5 transition-all text-slate-400 group-hover:text-cyan-400 shadow-xl">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+      </div>
+      <h2 class="text-xl md:text-2xl font-bold text-white mb-2">여기로 영상을 드래그 & 드롭하세요</h2>
+      <p class="text-sm text-slate-400 mb-4">또는 클릭하여 내 컴퓨터에서 영상 파일 선택 (MP4, MKV, WebM, MOV)</p>
+      <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400">
+        <span class="bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">무설치</span>
+        <span class="bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">100% 로컬 보안 변환</span>
+        <span class="bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">고화질 애니메이션 WebP</span>
+      </div>
+    </div>
+
+    <!-- 비디오 작업 영역 (영상 로드 후 노출) -->
+    <div id="workspace" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div class="flex items-center gap-3 truncate">
+            <span class="p-2 bg-cyan-500/10 text-cyan-400 rounded-lg shrink-0">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+              </svg>
+            </span>
+            <div class="truncate">
+              <div id="videoFileName" class="text-sm font-semibold text-white truncate">video_name.mp4</div>
+              <div id="videoMetaText" class="text-xs text-slate-400">1920x1080 • 00:00 • 0 MB</div>
+            </div>
+          </div>
+          <button id="changeFileBtn" class="text-xs text-slate-400 hover:text-cyan-400 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors border border-slate-700">
+            다른 영상 선택
+          </button>
+        </div>
+
+        <!-- 비디오 화면 영역 -->
+        <div class="relative bg-black rounded-2xl overflow-hidden aspect-video flex items-center justify-center border border-slate-800/80 shadow-inner group">
+          <video id="sourceVideo" class="w-full h-full object-contain pointer-events-auto" playsinline controls></video>
+        </div>
+
+        <!-- 구간 자르기 (트리밍) 설정 -->
+        <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-medium text-slate-300 flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path></svg>
+              변환 구간 선택 (트리밍)
+            </span>
+            <span id="rangeDurationText" class="text-cyan-400 font-mono">0.0초 구간 (0.0s ~ 0.0s)</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">시작 시점 (초)</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="startTimeInput" step="0.1" min="0" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-cyan-500 focus:outline-none">
+                <button id="setStartToCurrentBtn" title="현재 비디오 재생 위치로 설정" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-2 py-1.5 rounded-lg whitespace-nowrap">
+                  현재 위치
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">종료 시점 (초)</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="endTimeInput" step="0.1" min="0" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-cyan-500 focus:outline-none">
+                <button id="setEndToCurrentBtn" title="현재 비디오 재생 위치로 설정" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-2 py-1.5 rounded-lg whitespace-nowrap">
+                  현재 위치
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] text-slate-400">기본값으로 영상의 전체 구간이 선택됩니다.</p>
+            <button id="resetRangeToFullBtn" class="text-[11px] text-cyan-400 hover:underline">전체 구간 선택</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 flex flex-col gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <h3 class="font-bold text-white text-sm flex items-center gap-2">
+              <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+              변환 세부 옵션
+            </h3>
+            <span class="text-[11px] text-slate-400">Animated WebP</span>
+          </div>
+
+          <!-- 1. 해상도(스케일 & 직접 입력) 설정 -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs">
+              <label class="text-slate-300 font-medium">출력 해상도 (크기)</label>
+              <span id="outputResolutionBadge" class="text-cyan-400 font-mono">1920 x 1080 (100%)</span>
+            </div>
+            <select id="scaleSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+              <option value="1">원본 크기 (100%)</option>
+              <option value="0.75">중간 크기 (75%)</option>
+              <option value="0.5" selected>웹 추천 크기 (50%)</option>
+              <option value="0.33">작은 크기 (33%)</option>
+              <option value="0.25">초경량 (25%)</option>
+              <option value="custom_width_720">가로 720px 고정 (비율유지)</option>
+              <option value="custom_width_480">가로 480px 고정 (비율유지)</option>
+              <option value="custom_width_360">가로 360px 고정 (비율유지)</option>
+              <option value="custom_exact">직접 입력 (사용자 지정 너비 x 높이)</option>
+            </select>
+
+            <!-- 해상도 직접 입력 필드 (직접 입력 선택 시 활성화) -->
+            <div id="customResWrapper" class="hidden grid-cols-2 gap-2 pt-1">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">너비 (px)</label>
+                <input type="number" id="customWidthInput" min="16" max="7680" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500">
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-[10px] text-slate-400">높이 (px)</label>
+                  <label class="text-[10px] text-cyan-400 flex items-center gap-1 cursor-pointer">
+                    <input type="checkbox" id="lockAspectCheck" checked class="rounded accent-cyan-500">
+                    비율유지
+                  </label>
+                </div>
+                <input type="number" id="customHeightInput" min="16" max="4320" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500">
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 배속 (재생 속도) 설정 -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs">
+              <label class="text-slate-300 font-medium">재생 배속</label>
+              <span id="speedValueBadge" class="text-cyan-400 font-mono">1.0x (정속)</span>
+            </div>
+            <div class="grid grid-cols-5 gap-1.5">
+              <button type="button" data-speed="0.5" class="speed-btn py-1.5 text-xs font-medium rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 transition-all">0.5x</button>
+              <button type="button" data-speed="0.75" class="speed-btn py-1.5 text-xs font-medium rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 transition-all">0.75x</button>
+              <button type="button" data-speed="1.0" class="speed-btn py-1.5 text-xs font-semibold rounded-lg border border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-sm transition-all">1.0x</button>
+              <button type="button" data-speed="1.5" class="speed-btn py-1.5 text-xs font-medium rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 transition-all">1.5x</button>
+              <button type="button" data-speed="2.0" class="speed-btn py-1.5 text-xs font-medium rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 transition-all">2.0x</button>
+            </div>
+          </div>
+
+          <!-- 3. 프레임 레이트 (FPS) -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs">
+              <label class="text-slate-300 font-medium">프레임 레이트 (FPS)</label>
+              <span id="fpsValueBadge" class="text-cyan-400 font-mono">15 FPS</span>
+            </div>
+            <div class="grid grid-cols-7 gap-1">
+              <button type="button" data-fps="original" class="fps-btn py-2 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 hover:text-white transition-all whitespace-nowrap">원본</button>
+              <button type="button" data-fps="10" class="fps-btn py-2 text-xs font-medium rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 hover:text-white transition-all">10</button>
+              <button type="button" data-fps="15" class="fps-btn py-2 text-xs font-semibold rounded-xl border border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-sm transition-all">15</button>
+              <button type="button" data-fps="20" class="fps-btn py-2 text-xs font-medium rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 hover:text-white transition-all">20</button>
+              <button type="button" data-fps="24" class="fps-btn py-2 text-xs font-medium rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 hover:text-white transition-all">24</button>
+              <button type="button" data-fps="30" class="fps-btn py-2 text-xs font-medium rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 hover:text-white transition-all">30</button>
+              <button type="button" data-fps="60" class="fps-btn py-2 text-xs font-medium rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 hover:text-white transition-all">60</button>
+            </div>
+            <p id="originalFpsNotice" class="text-[11px] text-slate-400">영상 원본의 FPS를 감지하여 동일한 프레임 레이트로 인코딩합니다.</p>
+          </div>
+
+          <!-- 4. WebP 압축 품질 (Quality) -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs">
+              <label class="text-slate-300 font-medium">WebP 압축 품질</label>
+              <span id="qualityValueBadge" class="text-cyan-400 font-mono">80%</span>
+            </div>
+            <input type="range" id="qualityRange" min="10" max="100" value="80" class="w-full">
+            <div class="flex justify-between text-[10px] text-slate-400">
+              <span>용량 절약 (10%)</span>
+              <span>표준 권장 (75~85%)</span>
+              <span>최고 화질 (100%)</span>
+            </div>
+          </div>
+
+          <!-- 5. 무한 반복 여부 및 예상 프레임 정보 -->
+          <div class="flex items-center justify-between pt-1">
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="checkbox" id="infiniteLoopCheck" checked class="w-4 h-4 rounded text-cyan-500 accent-cyan-500 bg-slate-950 border-slate-700">
+              무한 반복(Loop) 재생
+            </label>
+            <span id="estimatedFramesText" class="text-xs text-slate-400 font-mono">약 0 프레임</span>
+          </div>
+
+          <!-- 6. 변환 실행 버튼 -->
+          <button id="startConvertBtn" class="w-full mt-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center gap-2 text-sm group">
+            <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+            </svg>
+            WebP 변환 시작하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="progressCard" class="hidden bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-w-xl mx-auto w-full flex flex-col gap-4 text-center">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="font-bold text-white text-base flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></span>
+          WebP 인코딩 변환 진행 중...
+        </h3>
+        <button id="cancelConvertBtn" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-1 rounded-lg border border-rose-500/20 transition-all">
+          취소
+        </button>
+      </div>
+
+      <div class="py-4">
+        <div class="flex justify-between items-center text-xs text-slate-300 mb-2">
+          <span id="progressStatusText">비디오 프레임 추출 중...</span>
+          <span id="progressPercentText" class="font-mono font-bold text-cyan-400">0%</span>
+        </div>
+        <div class="w-full bg-slate-950 h-3 rounded-full overflow-hidden p-0.5 border border-slate-800">
+          <div id="progressBar" class="bg-gradient-to-r from-cyan-500 to-indigo-500 h-full rounded-full w-0 transition-all duration-150"></div>
+        </div>
+        <div class="flex justify-between items-center text-[11px] text-slate-400 mt-2 font-mono">
+          <span id="currentFrameCount">0 / 0 프레임</span>
+          <span id="etaText">잠시만 기다려주세요...</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultCard" class="hidden bg-slate-900 border border-emerald-500/40 rounded-3xl p-6 shadow-2xl max-w-3xl mx-auto w-full flex flex-col gap-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold">
+            ✓
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">변환이 완료되었습니다!</h3>
+            <p class="text-xs text-slate-400">아래에서 완성된 애니메이션 WebP를 바로 확인하고 저장하세요.</p>
+          </div>
+        </div>
+        <button id="closeResultBtn" class="text-xs text-slate-400 hover:text-slate-200">✕ 닫기</button>
+      </div>
+
+      <!-- 생성된 WebP 미리보기 -->
+      <div class="flex flex-col md:flex-row gap-6 items-center">
+        <div class="w-full md:w-1/2 aspect-video bg-black rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center shadow-inner">
+          <img id="resultImagePreview" class="max-w-full max-h-full object-contain" alt="Converted WebP Preview" />
+        </div>
+
+        <div class="w-full md:w-1/2 flex flex-col gap-4">
+          <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col gap-2.5 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">파일 이름:</span>
+              <span id="resultFileName" class="text-white font-medium truncate max-w-[200px]">video.webp</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">해상도:</span>
+              <span id="resultResolution" class="text-cyan-400 font-mono">0 x 0</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">프레임 수 / FPS:</span>
+              <span id="resultFramesInfo" class="text-slate-200 font-mono">0 frames (0 fps)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">완성 파일 크기:</span>
+              <span id="resultFileSize" class="text-emerald-400 font-bold font-mono">0.00 MB</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <!-- 저장 버튼 -->
+            <button id="saveWebPBtn" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              WebP 파일 저장하기 (폴더 지정)
+            </button>
+            <p class="text-[11px] text-center text-slate-400">
+              저장 창에서 원본 파일이 있던 동일한 폴더를 지정하여 저장할 수 있습니다.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 숨김 캔버스 (프레임 캡처용) -->
+    <canvas id="hiddenCanvas" class="hidden"></canvas>
+  </main>
+
+  <footer class="mt-auto border-t border-slate-800/80 py-4 px-6 text-center text-xs text-slate-400">
+    <p>100% Client-Side Pure WebP Muxing Engine. No data is sent to any server.</p>
+  </footer>
+
+  <!-- 알림 토스트 (Alert 대체) -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 border border-slate-700 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 pointer-events-none">
+    <span id="toastIcon" class="text-cyan-400 text-base">ℹ️</span>
+    <span id="toastMessage">알림 내용</span>
+  </div>
+
+  <script>
+    /* =========================================================================
+       1. 순수 JS 브라우저 애니메이션 WebP Muxer (RIFF Container Synthesizer)
+       - 외부 라이브러리 없이 브라우저 내장 Canvas toDataURL('image/webp')로 
+         생성된 WebP 프레임 바이너리를 조합하여 단일 애니메이션 WebP를 생성합니다.
+       ========================================================================= */
+
+    class AnimatedWebPMuxer {
+      constructor(width, height, loopCount = 0) {
+        this.width = width;
+        this.height = height;
+        this.loopCount = loopCount; // 0 = infinite
+        this.frames = []; // { data: Uint8Array, duration: ms }
+      }
+
+      addFrame(webpUint8Array, durationMs) {
+        this.frames.push({
+          data: webpUint8Array,
+          duration: Math.round(durationMs)
+        });
+      }
+
+      // WebP RIFF 헤더 및 VP8/VP8L 청크 파싱 헬퍼
+      static parseWebPFrame(arrayBuffer) {
+        const view = new DataView(arrayBuffer);
+        // RIFF magic check
+        const riff = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
+        const webp = String.fromCharCode(view.getUint8(8), view.getUint8(9), view.getUint8(10), view.getUint8(11));
+        if (riff !== 'RIFF' || webp !== 'WEBP') {
+          throw new Error('유효하지 않은 WebP 바이너리 형식입니다.');
+        }
+
+        // 청크 탐색 (VP8 or VP8L)
+        let offset = 12;
+        while (offset < arrayBuffer.byteLength) {
+          const chunkTag = String.fromCharCode(
+            view.getUint8(offset),
+            view.getUint8(offset + 1),
+            view.getUint8(offset + 2),
+            view.getUint8(offset + 3)
+          );
+          const chunkSize = view.getUint32(offset + 4, true);
+
+          if (chunkTag === 'VP8 ' || chunkTag === 'VP8L') {
+            // 태그(4) + 크기(4) + 데이터(chunkSize) + 홀수일 경우 패딩(1)
+            const paddedSize = chunkSize % 2 !== 0 ? chunkSize + 1 : chunkSize;
+            const totalChunkLength = 8 + paddedSize;
+            return new Uint8Array(arrayBuffer, offset, Math.min(totalChunkLength, arrayBuffer.byteLength - offset));
+          }
+          offset += 8 + (chunkSize % 2 !== 0 ? chunkSize + 1 : chunkSize);
+        }
+
+        // 만약 VP8X 등이면 첫 서브 청크 반환
+        return new Uint8Array(arrayBuffer, 12);
+      }
+
+      build() {
+        if (this.frames.length === 0) {
+          throw new Error('변환할 프레임이 존재하지 않습니다.');
+        }
+
+        // 바이트 스트림 청크 수집
+        const parts = [];
+
+        // 1. VP8X 청크 (확장 헤더 - 애니메이션 플래그 0x02)
+        const vp8x = new Uint8Array(18);
+        const vp8xView = new DataView(vp8x.buffer);
+        AnimatedWebPMuxer.writeString(vp8xView, 0, 'VP8X');
+        vp8xView.setUint32(4, 10, true); // chunk payload size: 10 bytes
+        vp8xView.setUint8(8, 0x02); // Flags: has Animation
+        // reserved 3 bytes (9, 10, 11) = 0
+        // canvas width minus 1 (24-bit uint)
+        const wMinus1 = this.width - 1;
+        vp8xView.setUint8(12, wMinus1 & 0xff);
+        vp8xView.setUint8(13, (wMinus1 >> 8) & 0xff);
+        vp8xView.setUint8(14, (wMinus1 >> 16) & 0xff);
+        // canvas height minus 1 (24-bit uint)
+        const hMinus1 = this.height - 1;
+        vp8xView.setUint8(15, hMinus1 & 0xff);
+        vp8xView.setUint8(16, (hMinus1 >> 8) & 0xff);
+        vp8xView.setUint8(17, (hMinus1 >> 16) & 0xff);
+        parts.push(vp8x);
+
+        // 2. ANIM 청크 (루프 제어)
+        const anim = new Uint8Array(14);
+        const animView = new DataView(anim.buffer);
+        AnimatedWebPMuxer.writeString(animView, 0, 'ANIM');
+        animView.setUint32(4, 6, true); // payload: 6 bytes
+        animView.setUint32(8, 0, true); // bg color: 0 (transparent black)
+        animView.setUint16(12, this.loopCount, true); // loop count
+        parts.push(anim);
+
+        // 3. ANMF 청크들 (각 프레임)
+        for (let i = 0; i < this.frames.length; i++) {
+          const { data: rawPayload, duration } = this.frames[i];
+          const payloadLength = rawPayload.byteLength;
+          const anmfPayloadSize = 16 + payloadLength;
+          const paddedPayloadSize = anmfPayloadSize % 2 !== 0 ? anmfPayloadSize + 1 : anmfPayloadSize;
+
+          const anmfHeader = new Uint8Array(24);
+          const anmfView = new DataView(anmfHeader.buffer);
+          AnimatedWebPMuxer.writeString(anmfView, 0, 'ANMF');
+          anmfView.setUint32(4, anmfPayloadSize, true); // Chunk size
+          // frame X (3 bytes)
+          anmfView.setUint8(8, 0); anmfView.setUint8(9, 0); anmfView.setUint8(10, 0);
+          // frame Y (3 bytes)
+          anmfView.setUint8(11, 0); anmfView.setUint8(12, 0); anmfView.setUint8(13, 0);
+          // frame Width - 1 (3 bytes)
+          anmfView.setUint8(14, wMinus1 & 0xff);
+          anmfView.setUint8(15, (wMinus1 >> 8) & 0xff);
+          anmfView.setUint8(16, (wMinus1 >> 16) & 0xff);
+          // frame Height - 1 (3 bytes)
+          anmfView.setUint8(17, hMinus1 & 0xff);
+          anmfView.setUint8(18, (hMinus1 >> 8) & 0xff);
+          anmfView.setUint8(19, (hMinus1 >> 16) & 0xff);
+          // frame duration in ms (3 bytes LE)
+          anmfView.setUint8(20, duration & 0xff);
+          anmfView.setUint8(21, (duration >> 8) & 0xff);
+          anmfView.setUint8(22, (duration >> 16) & 0xff);
+          // frame flags: bit 0: blend (0: blend), bit 1: disposal (1: do not dispose) -> 0x00
+          anmfView.setUint8(23, 0x00);
+
+          parts.push(anmfHeader);
+          parts.push(rawPayload);
+
+          if (anmfPayloadSize % 2 !== 0) {
+            parts.push(new Uint8Array([0])); // RIFF 짝수 패딩 바이트
+          }
+        }
+
+        // 전체 파일 크기 계산
+        let totalPayloadSize = 4; // 'WEBP'
+        for (const p of parts) {
+          totalPayloadSize += p.byteLength;
+        }
+
+        // RIFF 메인 헤더
+        const riffHeader = new Uint8Array(12);
+        const riffView = new DataView(riffHeader.buffer);
+        AnimatedWebPMuxer.writeString(riffView, 0, 'RIFF');
+        riffView.setUint32(4, totalPayloadSize, true);
+        AnimatedWebPMuxer.writeString(riffView, 8, 'WEBP');
+
+        return new Blob([riffHeader, ...parts], { type: 'image/webp' });
+      }
+
+      static writeString(view, offset, str) {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      }
+    }
+
+    /* =========================================================================
+       2. 상태 관리 및 UI 요소 바인딩
+       ========================================================================= */
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const sourceVideo = document.getElementById('sourceVideo');
+    const videoFileName = document.getElementById('videoFileName');
+    const videoMetaText = document.getElementById('videoMetaText');
+    const changeFileBtn = document.getElementById('changeFileBtn');
+    
+    // 구간 설정
+    const startTimeInput = document.getElementById('startTimeInput');
+    const endTimeInput = document.getElementById('endTimeInput');
+    const setStartToCurrentBtn = document.getElementById('setStartToCurrentBtn');
+    const setEndToCurrentBtn = document.getElementById('setEndToCurrentBtn');
+    const resetRangeToFullBtn = document.getElementById('resetRangeToFullBtn');
+    const rangeDurationText = document.getElementById('rangeDurationText');
+
+    // 변환 설정
+    const scaleSelect = document.getElementById('scaleSelect');
+    const customResWrapper = document.getElementById('customResWrapper');
+    const customWidthInput = document.getElementById('customWidthInput');
+    const customHeightInput = document.getElementById('customHeightInput');
+    const lockAspectCheck = document.getElementById('lockAspectCheck');
+    const outputResolutionBadge = document.getElementById('outputResolutionBadge');
+
+    const speedButtons = document.querySelectorAll('.speed-btn');
+    const speedValueBadge = document.getElementById('speedValueBadge');
+
+    const fpsButtons = document.querySelectorAll('.fps-btn');
+    const fpsValueBadge = document.getElementById('fpsValueBadge');
+    const originalFpsNotice = document.getElementById('originalFpsNotice');
+
+    const qualityRange = document.getElementById('qualityRange');
+    const qualityValueBadge = document.getElementById('qualityValueBadge');
+    const infiniteLoopCheck = document.getElementById('infiniteLoopCheck');
+    const estimatedFramesText = document.getElementById('estimatedFramesText');
+    const startConvertBtn = document.getElementById('startConvertBtn');
+
+    // 진행 상태 및 결과
+    const progressCard = document.getElementById('progressCard');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercentText = document.getElementById('progressPercentText');
+    const progressStatusText = document.getElementById('progressStatusText');
+    const currentFrameCount = document.getElementById('currentFrameCount');
+    const etaText = document.getElementById('etaText');
+    const cancelConvertBtn = document.getElementById('cancelConvertBtn');
+
+    const resultCard = document.getElementById('resultCard');
+    const resultImagePreview = document.getElementById('resultImagePreview');
+    const resultFileName = document.getElementById('resultFileName');
+    const resultResolution = document.getElementById('resultResolution');
+    const resultFramesInfo = document.getElementById('resultFramesInfo');
+    const resultFileSize = document.getElementById('resultFileSize');
+    const saveWebPBtn = document.getElementById('saveWebPBtn');
+    const closeResultBtn = document.getElementById('closeResultBtn');
+
+    const hiddenCanvas = document.getElementById('hiddenCanvas');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+
+    // 내부 상태 변수
+    let currentFile = null;
+    let videoDuration = 0;
+    let videoNaturalWidth = 0;
+    let videoNaturalHeight = 0;
+    let detectedOriginalFps = 30; // 감지된 원본 FPS
+    let isFpsOriginalMode = false;
+    let selectedFps = 15;
+    let selectedSpeed = 1.0;
+    let isConverting = false;
+    let cancelRequested = false;
+    let generatedWebPBlob = null;
+    let defaultSaveFileName = 'output.webp';
+
+    /* =========================================================================
+       3. 헬퍼 유틸리티 함수
+       ========================================================================= */
+    function showToast(msg, icon = 'ℹ️', duration = 3000) {
+      toastIcon.textContent = icon;
+      toastMessage.textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, duration);
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = (seconds % 60).toFixed(1);
+      return `${mins.toString().padStart(2, '0')}:${secs.padStart(4, '0')}`;
+    }
+
+    function getActiveFps() {
+      return isFpsOriginalMode ? detectedOriginalFps : selectedFps;
+    }
+
+    function getTargetDimensions() {
+      const mode = scaleSelect.value;
+      if (!videoNaturalWidth || !videoNaturalHeight) return { width: 480, height: 270 };
+
+      let targetW = videoNaturalWidth;
+      let targetH = videoNaturalHeight;
+
+      if (mode === 'custom_exact') {
+        targetW = parseInt(customWidthInput.value, 10) || videoNaturalWidth;
+        targetH = parseInt(customHeightInput.value, 10) || videoNaturalHeight;
+      } else if (mode.startsWith('custom_width_')) {
+        const fixedWidth = parseInt(mode.replace('custom_width_', ''), 10);
+        const ratio = fixedWidth / videoNaturalWidth;
+        targetW = fixedWidth;
+        targetH = Math.round(videoNaturalHeight * ratio);
+      } else {
+        const scale = parseFloat(mode);
+        targetW = Math.round(videoNaturalWidth * scale);
+        targetH = Math.round(videoNaturalHeight * scale);
+      }
+
+      // WebP 인코더의 짝수 픽셀 정렬 권장
+      if (targetW % 2 !== 0) targetW += 1;
+      if (targetH % 2 !== 0) targetH += 1;
+
+      return { width: Math.max(16, targetW), height: Math.max(16, targetH) };
+    }
+
+    function updateCalculations() {
+      const { width, height } = getTargetDimensions();
+      outputResolutionBadge.textContent = `${width} x ${height}`;
+
+      const start = parseFloat(startTimeInput.value) || 0;
+      const end = parseFloat(endTimeInput.value) || 0;
+      const duration = Math.max(0, end - start);
+      
+      const activeFps = getActiveFps();
+      const outputDuration = duration / selectedSpeed;
+      rangeDurationText.textContent = `${duration.toFixed(1)}초 영상 → ${outputDuration.toFixed(1)}초 WebP (${selectedSpeed}x 배속)`;
+
+      const totalFrames = Math.max(1, Math.round(outputDuration * activeFps));
+      estimatedFramesText.textContent = `약 ${totalFrames} 프레임 (${activeFps} FPS • ${selectedSpeed}x)`;
+    }
+
+    // 영상 프레임 레이트 자동 감지
+    async function detectVideoFps(video) {
+      return new Promise((resolve) => {
+        if (!('requestVideoFrameCallback' in video)) {
+          resolve(30); // 지원하지 않는 브라우저는 30fps 기본값
+          return;
+        }
+
+        let frameCount = 0;
+        let startMediaTime = null;
+        let prevTime = 0;
+        let frameIntervals = [];
+
+        const checkCallback = (now, metadata) => {
+          if (startMediaTime === null) {
+            startMediaTime = metadata.mediaTime;
+            prevTime = metadata.mediaTime;
+          } else {
+            const diff = metadata.mediaTime - prevTime;
+            if (diff > 0.005) {
+              frameIntervals.push(diff);
+            }
+            prevTime = metadata.mediaTime;
+          }
+
+          frameCount++;
+          if (frameIntervals.length >= 15 || frameCount > 35) {
+            video.pause();
+            if (frameIntervals.length > 0) {
+              const avgInterval = frameIntervals.reduce((a, b) => a + b, 0) / frameIntervals.length;
+              const approxFps = Math.round(1 / avgInterval);
+              // 대표 FPS 표준값 근사 (24, 25, 30, 50, 60, 120 등)
+              let finalFps = approxFps;
+              if (approxFps >= 22 && approxFps <= 26) finalFps = 24;
+              else if (approxFps >= 28 && approxFps <= 32) finalFps = 30;
+              else if (approxFps >= 56 && approxFps <= 64) finalFps = 60;
+              resolve(finalFps);
+            } else {
+              resolve(30);
+            }
+          } else {
+            video.requestVideoFrameCallback(checkCallback);
+          }
+        };
+
+        const initialTime = video.currentTime;
+        video.muted = true;
+        video.playbackRate = 1.0;
+        video.play().then(() => {
+          video.requestVideoFrameCallback(checkCallback);
+        }).catch(() => {
+          resolve(30);
+        });
+
+        // 1초 내로 완료되지 않을 경우 타임아웃
+        setTimeout(() => {
+          video.pause();
+          video.currentTime = initialTime;
+          resolve(30);
+        }, 800);
+      });
+    }
+
+    /* =========================================================================
+       4. 파일 로드 및 비디오 메타데이터 처리
+       ========================================================================= */
+    function handleFile(file) {
+      if (!file) return;
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      const validExtensions = ['mp4', 'mkv', 'webm', 'mov', 'avi', 'wmv'];
+
+      if (!file.type.startsWith('video/') && !validExtensions.includes(ext)) {
+        showToast('지원되지 않는 파일 형식입니다. MP4 또는 MKV 영상을 선택해주세요.', '⚠️');
+        return;
+      }
+
+      currentFile = file;
+      defaultSaveFileName = file.name.substring(0, file.name.lastIndexOf('.')) + '.webp';
+      
+      const fileUrl = URL.createObjectURL(file);
+      sourceVideo.src = fileUrl;
+
+      videoFileName.textContent = file.name;
+      videoMetaText.textContent = `불러오는 중... • ${formatBytes(file.size)}`;
+
+      sourceVideo.onloadedmetadata = async () => {
+        videoDuration = sourceVideo.duration;
+        videoNaturalWidth = sourceVideo.videoWidth;
+        videoNaturalHeight = sourceVideo.videoHeight;
+
+        // 사용자 직접 입력 기본값도 원본 해상도로 채움
+        customWidthInput.value = videoNaturalWidth;
+        customHeightInput.value = videoNaturalHeight;
+
+        startTimeInput.min = '0';
+        startTimeInput.max = videoDuration.toString();
+        startTimeInput.value = '0';
+
+        // 4. 구간 선택 기본값: 영상의 최대 길이(전체 길이)
+        endTimeInput.min = '0';
+        endTimeInput.max = videoDuration.toString();
+        endTimeInput.value = videoDuration.toFixed(1);
+
+        dropzone.classList.add('hidden');
+        workspace.classList.remove('hidden');
+        resultCard.classList.add('hidden');
+
+        // 원본 FPS 감지 시도
+        try {
+          detectedOriginalFps = await detectVideoFps(sourceVideo);
+        } catch (e) {
+          detectedOriginalFps = 30;
+        }
+
+        sourceVideo.currentTime = 0;
+        videoMetaText.textContent = `${videoNaturalWidth}x${videoNaturalHeight} (${detectedOriginalFps}fps) • ${formatTime(videoDuration)} • ${formatBytes(file.size)}`;
+        originalFpsNotice.textContent = `영상에서 감지된 원본 속도: 약 ${detectedOriginalFps} FPS`;
+
+        if (isFpsOriginalMode) {
+          fpsValueBadge.textContent = `${detectedOriginalFps} FPS (원본)`;
+        }
+
+        updateCalculations();
+        showToast(`영상을 성공적으로 불러왔습니다. (원본: ${detectedOriginalFps}fps)`, '🎬');
+      };
+
+      sourceVideo.onerror = () => {
+        showToast('브라우저에서 이 비디오 코덱을 디코딩할 수 없습니다. 표준 H.264 MP4를 권장합니다.', '❌', 4000);
+      };
+    }
+
+    // 드래그 & 드롭 이벤트
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-cyan-500', 'bg-cyan-500/10');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-cyan-500', 'bg-cyan-500/10');
+      });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt.files && dt.files.length > 0) {
+        handleFile(dt.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    changeFileBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      dropzone.classList.remove('hidden');
+      workspace.classList.add('hidden');
+      resultCard.classList.add('hidden');
+      progressCard.classList.add('hidden');
+      sourceVideo.pause();
+      sourceVideo.src = '';
+    });
+
+    /* =========================================================================
+       5. 컨트롤 이벤트 바인딩
+       ========================================================================= */
+    setStartToCurrentBtn.addEventListener('click', () => {
+      const current = sourceVideo.currentTime;
+      startTimeInput.value = current.toFixed(1);
+      if (parseFloat(endTimeInput.value) <= current) {
+        endTimeInput.value = Math.min(videoDuration, current + 3).toFixed(1);
+      }
+      updateCalculations();
+    });
+
+    setEndToCurrentBtn.addEventListener('click', () => {
+      const current = sourceVideo.currentTime;
+      if (current <= parseFloat(startTimeInput.value)) {
+        showToast('종료 시점은 시작 시점보다 뒤여야 합니다.', '⚠️');
+        return;
+      }
+      endTimeInput.value = current.toFixed(1);
+      updateCalculations();
+    });
+
+    resetRangeToFullBtn.addEventListener('click', () => {
+      startTimeInput.value = '0';
+      endTimeInput.value = videoDuration.toFixed(1);
+      updateCalculations();
+      showToast('전체 구간으로 재설정되었습니다.', '↺');
+    });
+
+    startTimeInput.addEventListener('input', updateCalculations);
+    endTimeInput.addEventListener('input', updateCalculations);
+
+    // 해상도 셀렉트 및 커스텀 입력 제어
+    scaleSelect.addEventListener('change', () => {
+      if (scaleSelect.value === 'custom_exact') {
+        customResWrapper.classList.remove('hidden');
+        customResWrapper.classList.add('grid');
+      } else {
+        customResWrapper.classList.add('hidden');
+        customResWrapper.classList.remove('grid');
+      }
+      updateCalculations();
+    });
+
+    customWidthInput.addEventListener('input', () => {
+      if (lockAspectCheck.checked && videoNaturalWidth && videoNaturalHeight) {
+        const w = parseInt(customWidthInput.value, 10);
+        if (w > 0) {
+          const ratio = videoNaturalHeight / videoNaturalWidth;
+          customHeightInput.value = Math.round(w * ratio);
+        }
+      }
+      updateCalculations();
+    });
+
+    customHeightInput.addEventListener('input', () => {
+      if (lockAspectCheck.checked && videoNaturalWidth && videoNaturalHeight) {
+        const h = parseInt(customHeightInput.value, 10);
+        if (h > 0) {
+          const ratio = videoNaturalWidth / videoNaturalHeight;
+          customWidthInput.value = Math.round(h * ratio);
+        }
+      }
+      updateCalculations();
+    });
+
+    // 배속 버튼 제어
+    speedButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        speedButtons.forEach(b => {
+          b.className = 'speed-btn py-1.5 text-xs font-medium rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 transition-all';
+        });
+        btn.className = 'speed-btn py-1.5 text-xs font-semibold rounded-lg border border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-sm transition-all';
+        selectedSpeed = parseFloat(btn.dataset.speed);
+        speedValueBadge.textContent = `${selectedSpeed}x (${selectedSpeed === 1.0 ? '정속' : selectedSpeed > 1 ? '빠름' : '슬로우'})`;
+        updateCalculations();
+      });
+    });
+
+    // FPS 버튼 제어
+    fpsButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        fpsButtons.forEach(b => {
+          b.className = 'fps-btn py-2 text-xs font-medium rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 hover:text-white transition-all';
+        });
+        btn.className = 'fps-btn py-2 text-xs font-semibold rounded-xl border border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-sm transition-all';
+        
+        if (btn.dataset.fps === 'original') {
+          isFpsOriginalMode = true;
+          fpsValueBadge.textContent = `${detectedOriginalFps} FPS (원본)`;
+        } else {
+          isFpsOriginalMode = false;
+          selectedFps = parseInt(btn.dataset.fps, 10);
+          fpsValueBadge.textContent = `${selectedFps} FPS`;
+        }
+        updateCalculations();
+      });
+    });
+
+    qualityRange.addEventListener('input', (e) => {
+      qualityValueBadge.textContent = `${e.target.value}%`;
+    });
+
+    closeResultBtn.addEventListener('click', () => {
+      resultCard.classList.add('hidden');
+    });
+
+    /* =========================================================================
+       6. 핵심 변환 파이프라인 (프레임 캡처 -> WebP 변환 -> Muxing)
+       ========================================================================= */
+    async function seekVideoToTime(video, time) {
+      return new Promise((resolve) => {
+        const onSeeked = () => {
+          video.removeEventListener('seeked', onSeeked);
+          resolve();
+        };
+        video.addEventListener('seeked', onSeeked);
+        video.currentTime = time;
+      });
+    }
+
+    async function blobToArrayBuffer(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(blob);
+      });
+    }
+
+    startConvertBtn.addEventListener('click', async () => {
+      if (isConverting) return;
+
+      const startTime = parseFloat(startTimeInput.value) || 0;
+      const endTime = parseFloat(endTimeInput.value) || 0;
+
+      if (endTime <= startTime) {
+        showToast('종료 시점이 시작 시점보다 커야 합니다.', '⚠️');
+        return;
+      }
+
+      const activeFps = getActiveFps();
+      const originalDuration = endTime - startTime;
+      const outputDuration = originalDuration / selectedSpeed;
+      const totalFrames = Math.max(1, Math.round(outputDuration * activeFps));
+      const frameInterval = (1 / activeFps) * selectedSpeed; // 배속이 적용된 원본 영상 탐색 간격
+      const frameDelayMs = 1000 / activeFps;
+      const quality = parseFloat(qualityRange.value) / 100;
+      const { width, height } = getTargetDimensions();
+      const loopCount = infiniteLoopCheck.checked ? 0 : 1;
+
+      // 변환 상태 초기화
+      isConverting = true;
+      cancelRequested = false;
+      workspace.classList.add('pointer-events-none', 'opacity-50');
+      progressCard.classList.remove('hidden');
+      resultCard.classList.add('hidden');
+      progressBar.style.width = '0%';
+      progressPercentText.textContent = '0%';
+      progressStatusText.textContent = '인코딩 엔진 초기화 중...';
+
+      sourceVideo.pause();
+
+      hiddenCanvas.width = width;
+      hiddenCanvas.height = height;
+      const ctx = hiddenCanvas.getContext('2d', { willReadFrequently: true });
+
+      const muxer = new AnimatedWebPMuxer(width, height, loopCount);
+      const conversionStartTime = performance.now();
+
+      try {
+        for (let i = 0; i < totalFrames; i++) {
+          if (cancelRequested) {
+            showToast('변환이 취소되었습니다.', '🛑');
+            break;
+          }
+
+          const targetTime = Math.min(endTime, startTime + (i * frameInterval));
+          await seekVideoToTime(sourceVideo, targetTime);
+
+          // 캔버스에 프레임 그리기
+          ctx.drawImage(sourceVideo, 0, 0, width, height);
+
+          // 브라우저 네이티브 WebP 프레임 인코딩
+          const frameBlob = await new Promise((res) => {
+            hiddenCanvas.toBlob(res, 'image/webp', quality);
+          });
+
+          if (!frameBlob) {
+            throw new Error('WebP 프레임 생성에 실패했습니다.');
+          }
+
+          const frameBuffer = await blobToArrayBuffer(frameBlob);
+          const framePayload = AnimatedWebPMuxer.parseWebPFrame(frameBuffer);
+
+          muxer.addFrame(framePayload, frameDelayMs);
+
+          // 진행률 업데이트
+          const currentProgress = Math.round(((i + 1) / totalFrames) * 100);
+          progressBar.style.width = `${currentProgress}%`;
+          progressPercentText.textContent = `${currentProgress}%`;
+          currentFrameCount.textContent = `${i + 1} / ${totalFrames} 프레임`;
+
+          // 남은 시간(ETA) 계산
+          const elapsed = (performance.now() - conversionStartTime) / 1000;
+          const framesPerSec = (i + 1) / elapsed;
+          const remainingFrames = totalFrames - (i + 1);
+          const remainingSec = framesPerSec > 0 ? Math.ceil(remainingFrames / framesPerSec) : 0;
+          etaText.textContent = remainingSec > 0 ? `예상 남은 시간: 약 ${remainingSec}초` : '패키징 준비 중...';
+        }
+
+        if (!cancelRequested) {
+          progressStatusText.textContent = 'WebP RIFF 컨테이너 패키징 중...';
+          await new Promise((r) => setTimeout(r, 100)); // UI 갱신 유예
+
+          const finalWebPBlob = muxer.build();
+          generatedWebPBlob = finalWebPBlob;
+
+          // 결과 화면 세팅
+          const webpUrl = URL.createObjectURL(finalWebPBlob);
+          resultImagePreview.src = webpUrl;
+          resultFileName.textContent = defaultSaveFileName;
+          resultResolution.textContent = `${width} x ${height} px`;
+          resultFramesInfo.textContent = `${totalFrames} frames (${activeFps} fps, ${selectedSpeed}x)`;
+          resultFileSize.textContent = formatBytes(finalWebPBlob.size);
+
+          progressCard.classList.add('hidden');
+          resultCard.classList.remove('hidden');
+          showToast('WebP 변환이 성공적으로 완료되었습니다!', '🎉');
+        }
+
+      } catch (err) {
+        console.error(err);
+        showToast(`변환 중 오류 발생: ${err.message}`, '❌', 4000);
+      } finally {
+        isConverting = false;
+        workspace.classList.remove('pointer-events-none', 'opacity-50');
+        progressCard.classList.add('hidden');
+      }
+    });
+
+    cancelConvertBtn.addEventListener('click', () => {
+      if (isConverting) {
+        cancelRequested = true;
+      }
+    });
+
+    /* =========================================================================
+       7. 파일 저장 (File System Access API & a.download 폴백)
+       ========================================================================= */
+    saveWebPBtn.addEventListener('click', async () => {
+      if (!generatedWebPBlob) return;
+
+      // 1. File System Access API 지원 시 (사용자가 원본 영상 폴더를 직접 선택하여 바로 저장 가능)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: defaultSaveFileName,
+            types: [{
+              description: 'Animated WebP Image',
+              accept: { 'image/webp': ['.webp'] }
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(generatedWebPBlob);
+          await writable.close();
+          showToast('지정하신 폴더에 성공적으로 저장되었습니다!', '💾');
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            return; // 사용자가 저장 취소
+          }
+          // 기타 에러 시 기본 다운로드로 폴백
+          console.warn('FilePicker 실패, 기본 다운로드로 진행:', err);
+        }
+      }
+
+      // 2. 기본 브라우저 다운로드 트리거
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(generatedWebPBlob);
+      downloadLink.download = defaultSaveFileName;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      showToast('다운로드 폴더에 WebP 파일이 저장되었습니다.', '💾');
+    });
+  </script>
+</body>
+</html>
